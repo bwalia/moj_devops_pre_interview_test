@@ -4,7 +4,7 @@ Add automatic EC2 instance provisioning via Ansible
 
 ##Requirements
 
-Requires Ansible and `boto` python package form where you wish to run this Playbook. You can install it via **PIP** if using RHEL/Ubuntu etc.
+Requires Ansible and `boto` python package on the machine from where you wish to run this Ansible Playbook. You can install it via **PIP** if using RHEL/Ubuntu etc.
 EC2 instance is created using Amazon standard linux AMI so we should have AWS CLI tools already installed to interact with S3
 Example Playbook (aws_instance_store_on_s3.yml)
 ----------------
