@@ -30,7 +30,7 @@ Example Playbook (aws_instance_store_on_s3.yml)
         instance_type: t2.nano
         image: {{ ec2.instance.ami_image }}  # <--- Amazon standard linux AMI so we get AWS CLI on launch
         region: {{ aws_region }}
-        instance_profile_name: iam_instance_role_shared_with_s3  # <--- This iam_instance_role_shared_with_s3 iam role makes sure the bucket is accessible from ec2 instance
+        instance_profile_name: iam_instance_role_shared_with_s3  # <--- This iam_instance_role_shared_with_s3 iam role makes sure the bucket is accessible from ec2 instance automatically without having to share keys and secrets
         wait: yes
         instance_tags:
            group: s3-file-storage-instances
