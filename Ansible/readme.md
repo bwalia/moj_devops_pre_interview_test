@@ -8,6 +8,40 @@ Note when the application runs on the instance, it can use the role’s temporar
 Requires Ansible and `boto` python package. You can install it via **PIP**
 Example Playbook (aws_instance_store_on_s3.yml)
 
+## Bucket Policy may look like:
+
+{
+"Version": "2017-07-06",
+"Statement": [
+{
+"Effect": "Allow",
+"Action": [
+"s3:ListBucket"
+],
+"Resource": [
+"arn:aws:s3:::s3-bucket-name-goes-here"
+]
+},
+{
+"Effect": "Allow",
+"Action": [
+"s3:PutObject",
+"s3:GetObject",
+"s3:DeleteObject",
+"s3:ListObject"
+],
+"Resource": [
+"arn:aws:s3:::s3-bucket-name-goes-here/*"
+]
+}
+]
+}
+
+
+## list the items in the bucket after uploading to test it is working or not:
+
+aws s3 ls s3://s3-bucket-name-goes-here
+
 ----------------
 
 - name: Create an EC2 instance
