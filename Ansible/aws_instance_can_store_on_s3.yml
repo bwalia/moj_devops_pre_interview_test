@@ -1,0 +1,71 @@
+#The Ansible role AWS EC2
+
+Add automatic EC2 instance provisioning via Ansible
+
+##Requirements
+
+Requires Ansible and `boto` python package form where you wish to run this Playbook. You can install it via **PIP** if using RHEL/Ubuntu etc.
+EC2 instance is created using Amazon standard linux AMI so we should have AWS CLI tools already installed to interact with S3
+Example Playbook (aws_instance_store_on_s3.yml)
+----------------
+
+---
+- name: A simple EC2 instance using the Amazon standard linux AMI
+  remote_user: ec2-user
+  sudo: True
+  hosts: localhost
+  connection: local
+  gather_facts: False
+  roles:
+    - ec2-s3-store-allow-role  # <--- This is ansible role for ref only
+  tasks:
+    - name: Spin up the ec2 instance which can store files on s3 - bucket-name-goes-here
+      ec2:
+        aws_access_key: {{ aws_access_key }}
+        aws_secret_key: {{ aws_secret_key }}
+      state: present
+      assign_public_ip: yes
+      group: {{ security_group }}  # <--- This security_group ref makes sure the bucket is accessible from ec2 over http(s), ssh access may also be allowed to run command and test s3 integration is a success
+      group_id: {{ groups.group_id }}
+        instance_type: t2.nano
+        image: {{ ec2.instance.ami_image }}  # <--- Amazon standard linux AMI so we get AWS CLI on launch
+        region: {{ aws_region }}
+        instance_profile_name: iam_instance_role_shared_with_s3  # <--- This iam_instance_role_shared_with_s3 iam role makes sure the bucket is accessible from ec2 instance
+        wait: yes
+        instance_tags:
+           group: s3-file-storage-instances
+           env: {{ env }}
+           name: {{ prefix }}-{{ env }}-instance-01"
+        exact_count: 3
+        count_tags:
+           group: s3-file-storage-instances
+           env: {{ env }}
+           name: {{ prefix }}-{{ env }}-instance-01"
+      key_name: {{ keyname }}  # <--- This keypair name is required to access the instance over ssh so we can test s3 integration is a success
+      private_ip: no
+      source_dest_check: true
+      tenancy: default
+    volumes:
+      - device_name: /dev/xvdb
+        device_type: standard
+        volume_size: 10
+        delete_on_termination: True
+      vpc_subnet_id: {{ ec2.instance.subnets[0]['id'] }}  # <--- This vpc_subnet_id policy makes sure ec2 instance has network access to S3 bucket over http(s). The bucket must be present in same AWS region.
+    wait: True
+      zone: {{ ec2.instance.subnets[0]['az'] }}
+  ec2_tag:
+    region: {{ aws_region }}
+    resource: vol-name-id-goes-here
+    state: present
+  tags:
+      name: ec2
+      bucket: bucket-name-goes-here
+  register: ec2-can-store-on-s3
+
+    - name: wait for the ec2 instance to appear on the network
+      wait_for: host={{ item.public_dns_name }} port=22 delay=10 timeout=180 state=started
+      with_items: ec2-can-store-on-s3.tagged_instances
+
+    - name: add server ip addresses to hosts group
+      add_host: hostname={{ item.public_ip }} groupname={{ security_group }}
+      with_items: ec2-can-store-on-s3.tagged_instances

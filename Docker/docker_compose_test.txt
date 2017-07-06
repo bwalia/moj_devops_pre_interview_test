@@ -1,0 +1,47 @@
+Create a docker-compose file using v2 format that will create an nginx web server and
+postgres database container which can communicate successfully.
+
+It says that there are three services for this project: nginx, web_app, sql_db. nginx depends on web_app, web_app depends on sql_db. sql_db container uses postgres's latest image from dockerhub.
+Default username for db is postgres and password is postgres 
+web_app container is build using project's Dockerfile. It mounts src directory into it and exposes port 8000. version is being used for which format to use to compose the docker file.
+
+nginx uses nginx's latest image from dockerhub. This nginx proxy server is accessible from port 8000. It mounts src, static and config directory.
+
+
+ENVIRONMENT VARIABLES:
+
+NGINXDOCKERNAME = "nginx"
+PYTHONPHPWEBAPPDOCKERNAME = "web_app"
+PSQLDOCKERNAME = "sql_db"
+
+docker-compose.yml:
+
+version: '2'  
+services:  
+  nginx:
+    image: nginx:latest
+    container_name: NGINXDOCKERNAME
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/src
+      - ./config/nginx:/etc/nginx/conf.d
+      - /static:/static  <--- Static files can be served from this mounted path so nginx must be able to read files from this path
+    depends_on:
+      - web_app
+  web_app:
+    build: .
+    container_name: PYTHONPHPWEBAPPDOCKERNAME
+    command: bash -c "python manage.py makemigrations && python manage.py migrate && gunicorn pythonapp.wsgi -b 0.0.0.0:8000 or php5 app perhaps to start php5-fpm and php scripts can communicate with db"
+    depends_on:
+      - sql_db
+    volumes:
+      - ./src:/src
+      - /static:/static  <--- Static files can be served from this mounted path so Python/PHP must be able to read files from this path
+      - /dynamic:/dynamic  <--- Dynamic Python or PHP files can be served from this mounted path so Python/PHP must be able to read files from this path
+    expose:
+      - "8000"
+
+  sql_db:
+    image: postgres:latest
+    container_name: PSQLDOCKERNAME
